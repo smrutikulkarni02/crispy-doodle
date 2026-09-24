@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PM Copilot</title>
+<style>
+:root {
+  --bg: #f8f9fa;
+  --bg-card: #ffffff;
+  --bg-sidebar: #1a1a2e;
+  --text: #212529;
+  --text-muted: #6c757d;
+  --text-sidebar: #e0e0e0;
+  --primary: #4361ee;
+  --primary-hover: #3a56d4;
+  --success: #06d6a0;
+  --warning: #ffd166;
+  --danger: #ef476f;
+  --border: #dee2e6;
+  --radius: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 260px;
+  background: var(--bg-sidebar);
+  color: var(--text-sidebar);
+  padding: 24px 0;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar h1 {
+  font-size: 20px;
+  padding: 0 20px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  margin-bottom: 12px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.sidebar h1 span { color: var(--primary); }
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-size: 14px;
+  border-left: 3px solid transparent;
+}
+
+.nav-item:hover { background: rgba(255,255,255,0.05); }
+.nav-item.active {
+  background: rgba(67,97,238,0.15);
+  border-left-color: var(--primary);
+  color: #fff;
+}
+
+.nav-item .icon { font-size: 18px; width: 24px; text-align: center; }
+.nav-item .badge {
+  margin-left: auto;
+  background: var(--primary);
+  color: #fff;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+/* Main */
+.main {
+  flex: 1;
+  padding: 24px 32px;
+  max-width: 1100px;
+  overflow-y: auto;
+}
+
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-header h2 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.page-header p { color: var(--text-muted); font-size: 14px; }
+
+/* Cards */
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  font-size: 16px;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+/* Forms */
+textarea, input[type="text"], select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--bg);
+  color: var(--text);
+  resize: vertical;
+}
+
+textarea:focus, input:focus { outline: none; border-color: var(--primary); }
+
+textarea { min-height: 120px; }
+
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--text-muted);
+}
+
+.form-group { margin-bottom: 14px; }
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-sm { padding: 5px 12px; font-size: 13px; }
+
+/* Results */
+.result-area {
+  margin-top: 16px;
+  min-height: 60px;
+}
+
+.result-area pre {
+  background: var(--bg);
+  padding: 16px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  border: 1px solid var(--border);
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.spinner {
+  width: 18px; height: 18px;
+  border: 2px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Themes/Clusters */
+.theme-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+}
+
+.theme-severity {
+  width: 4px;
+  min-height: 40px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.severity-critical { background: var(--danger); }
+.severity-high { background: #ff8800; }
+.severity-medium { background: var(--warning); }
+.severity-low { background: var(--success); }
+
+.theme-content { flex: 1; }
+.theme-name { font-weight: 600; font-size: 14px; }
+.theme-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.theme-quotes { font-size: 13px; color: var(--text-muted); margin-top: 6px; font-style: italic; }
+
+/* Tags */
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.tag-positive { background: #d4edda; color: #155724; }
+.tag-negative { background: #f8d7da; color: #721c24; }
+.tag-neutral { background: #e2e3e5; color: #383d41; }
+.tag-mixed { background: #fff3cd; color: #856404; }
+.tag-spike { background: var(--danger); color: #fff; }
+.tag-rising { background: #ff8800; color: #fff; }
+
+/* Checklist */
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.checklist-item:last-child { border-bottom: none; }
+
+.status-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-pending { background: var(--text-muted); }
+.status-approved { background: var(--success); }
+.status-blocked { background: var(--danger); }
+.status-in_progress { background: var(--warning); }
+
+/* Action items */
+.action-item {
+  padding: 8px 12px;
+  border-left: 3px solid var(--primary);
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.action-owner { font-weight: 600; color: var(--primary); }
+
+/* RICE table */
+.rice-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.rice-table th, .rice-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.rice-table th { font-weight: 600; color: var(--text-muted); font-size: 12px; text-transform: uppercase; }
+.rice-table tr:hover { background: var(--bg); }
+
+.rice-score {
+  font-weight: 700;
+  color: var(--primary);
+}
+
+/* Grid */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* Markdown output */
+.markdown-output h1 { font-size: 20px; margin: 16px 0 8px; }
+.markdown-output h2 { font-size: 17px; margin: 14px 0 6px; }
+.markdown-output h3 { font-size: 15px; margin: 12px 0 4px; }
+.markdown-output p { margin-bottom: 8px; line-height: 1.6; }
+.markdown-output ul, .markdown-output ol { margin: 8px 0 8px 20px; }
+.markdown-output li { margin-bottom: 4px; }
+.markdown-output code { background: var(--bg); padding: 1px 4px; border-radius: 3px; font-size: 13px; }
+.markdown-output blockquote { border-left: 3px solid var(--primary); padding-left: 12px; color: var(--text-muted); margin: 8px 0; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  body { flex-direction: column; }
+  .sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 12px; }
+  .sidebar h1 { display: none; }
+  .nav-item { padding: 8px 12px; white-space: nowrap; border-left: none; border-bottom: 2px solid transparent; }
+  .nav-item.active { border-bottom-color: var(--primary); border-left-color: transparent; }
+  .main { padding: 16px; }
+  .grid-2 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <h1>PM <span>Copilot</span></h1>
+  <div class="nav-item active" data-page="feedback">
+    <span class="icon">&#x1f4ca;</span> Feedback Intel
+  </div>
+  <div class="nav-item" data-page="status">
+    <span class="icon">&#x1f4cb;</span> Status Reports
+  </div>
+  <div class="nav-item" data-page="launch">
+    <span class="icon">&#x1f680;</span> Launch Readiness
+  </div>
+  <div class="nav-item" data-page="analytics">
+    <span class="icon">&#x1f4c8;</span> Analytics
+  </div>
+  <div class="nav-item" data-page="prd">
+    <span class="icon">&#x1f4dd;</span> PRD Co-pilot
+  </div>
+  <div class="nav-item" data-page="competitor">
+    <span class="icon">&#x1f50d;</span> Competitor Watch
+  </div>
+  <div class="nav-item" data-page="meeting">
+    <span class="icon">&#x1f3af;</span> Meeting Actions
+  </div>
+  <div class="nav-item" data-page="onboarding">
+    <span class="icon">&#x1f4da;</span> Onboarding Q&A
+  </div>
+  <div class="nav-item" data-page="prioritization">
+    <span class="icon">&#x2696;</span> Prioritization
+  </div>
+</nav>
+
+<main class="main" id="app"></main>
+
+<script>
+const API = {
+  async post(path, data) {
+    const res = await fetch(`/api${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return res.json();
+  },
+  async get(path) {
+    const res = await fetch(`/api${path}`);
+    return res.json();
+  }
+};
+
+function md(text) {
+  if (!text) return '';
+  return text
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code>$1</code>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/^(?!<[hulo])(.+)$/gm, '<p>$1</p>');
+}
+
+function loading() {
+  return '<div class="loading"><div class="spinner"></div> Analyzing...</div>';
+}
+
+function sentimentTag(s) {
+  return `<span class="tag tag-${s}">${s}</span>`;
+}
+
+function trendTag(t) {
+  if (t === 'spike') return '<span class="tag tag-spike">SPIKE</span>';
+  if (t === 'rising') return '<span class="tag tag-rising">rising</span>';
+  return `<span class="tag tag-neutral">${t}</span>`;
+}
+
+// --- Page renderers ---
+const pages = {
+  feedback() {
+    return `
+      <div class="page-header">
+        <h2>Feedback Intelligence</h2>
+        <p>Synthesize user reviews into actionable themes and trends</p>
+      </div>
+      <div class="card">
+        <h3>Analyze Feedback</h3>
+        <div class="form-group">
+          <label>Product Name</label>
+          <input type="text" id="fb-product" placeholder="e.g., Google Maps">
+        </div>
+        <div class="form-group">
+          <label>Paste Reviews (one per line)</label>
+          <textarea id="fb-reviews" placeholder="App crashes every time I open it after the latest update&#10;Love the new dark mode feature, works great!&#10;Loading is way too slow on my Pixel 7&#10;..."></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="runFeedback()">Analyze Reviews</button>
+      </div>
+      <div id="fb-result" class="result-area"></div>`;
+  },
+
+  status() {
+    return `
+      <div class="page-header">
+        <h2>Status Reports</h2>
+        <p>Generate team and executive status updates from project data</p>
+      </div>
+      <div class="card">
+        <h3>Generate Status Report</h3>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Team Name</label>
+            <input type="text" id="st-team" placeholder="e.g., Search Team">
+          </div>
+          <div class="form-group">
+            <label>Period</label>
+            <input type="text" id="st-period" placeholder="e.g., Week of Sep 22">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Paste Updates (from Slack, standups, etc.)</label>
+          <textarea id="st-updates" placeholder="John: Shipped the new search filter, now working on pagination&#10;Sarah: Blocked on API review from platform team&#10;Mike: Design review for v2 mockups scheduled Thursday&#10;..."></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="runStatus()">Generate Report</button>
+      </div>
+      <div id="st-result" class="result-area"></div>`;
+  },
+
+  launch() {
+    return `
+      <div class="page-header">
+        <h2>Launch Readiness</h2>
+        <p>Generate launch checklists with pre-drafted review answers</p>
+      </div>
+      <div class="card">
+        <h3>Check Launch Readiness</h3>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Product / Feature Name</label>
+            <input type="text" id="la-product" placeholder="e.g., In-App Payments v2">
+          </div>
+          <div class="form-group">
+            <label>Target Launch Date</label>
+            <input type="text" id="la-date" placeholder="e.g., Q1 2026">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>PRD or Feature Description</label>
+          <textarea id="la-prd" style="min-height:200px" placeholder="Paste your PRD or describe the feature in detail..."></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="runLaunch()">Check Readiness</button>
+      </div>
+      <div id="la-result" class="result-area"></div>`;
+  },
+
+  analytics() {
+    return `
+      <div class="page-header">
+        <h2>Analytics Agent</h2>
+        <p>Ask data questions in plain English — get SQL, results, and caveats</p>
+      </div>
+      <div class="card">
+        <h3>Ask a Question</h3>
+        <div class="form-group">
+          <label>Your Question</label>
+          <textarea id="an-question" style="min-height:80px" placeholder="e.g., Did retention drop for Android users in India last month?"></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="runAnalytics()">Generate Query</button>
+      </div>
+      <div id="an-result" class="result-area"></div>`;
+  },
+
+  prd() {
+    return `
+      <div class="page-header">
+        <h2>PRD Co-pilot</h2>
+        <p>Draft and critique PRDs with structured guidance</p>
+      </div>
+      <div class="card">
+        <h3>Mode</h3>
+        <div style="display:flex;gap:8px;margin-bottom:14px;">
+          <button class="btn btn-primary btn-sm" onclick="setPrdMode('draft')" id="prd-btn-draft">Draft PRD</button>
+          <button class="btn btn-sm" style="background:var(--border)" onclick="setPrdMode('interview')" id="prd-btn-interview">Get Interview Questions</button>
+          <button class="btn btn-sm" style="background:var(--border)" onclick="setPrdMode('critique')" id="prd-btn-critique">Critique PRD</button>
+        </div>
+        <div id="prd-form-draft">
+          <div class="form-group">
+            <label>Feature Title</label>
+            <input type="text" id="prd-title" placeholder="e.g., Offline Mode for Mobile App">
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea id="prd-desc" placeholder="Describe the feature, target users, and problem it solves..."></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="runPrd()">Draft PRD</button>
+        </div>
+        <div id="prd-form-interview" style="display:none">
+          <div class="form-group">
+            <label>Feature Context</label>
+            <textarea id="prd-context" placeholder="Brief description of what you're building..."></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="runPrdInterview()">Generate Questions</button>
+        </div>
+        <div id="prd-form-critique" style="display:none">
+          <div class="form-group">
+            <label>Paste Your PRD</label>
+            <textarea id="prd-critique-text" style="min-height:200px" placeholder="Paste the full PRD to critique..."></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="runPrdCritique()">Critique PRD</button>
+        </div>
+      </div>
+      <div id="prd-result" class="result-area"></div>`;
+  },
+
+  competitor() {
+    return `
+      <div class="page-header">
+        <h2>Competitor Watch</h2>
+        <p>Track competitors and get strategic impact analysis</p>
+      </div>
+      <div class="card">
+        <h3>Analyze Competitor Updates</h3>
+        <div class="form-group">
+          <label>Your Product</label>
+          <input type="text" id="co-product" placeholder="e.g., Google Photos">
+        </div>
+        <div class="form-group">
+          <label>Competitor Intelligence (paste news, changelogs, announcements)</label>
+          <textarea id="co-updates" style="min-height:200px" placeholder="Apple Photos announced a new AI editing feature that...&#10;Samsung Gallery now supports...&#10;Adobe Lightroom released pricing changes..."></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="runCompetitor()">Analyze</button>
+      </div>
+      <div id="co-result" class="result-area"></div>`;
+  },
+
+  meeting() {
+    return `
+      <div class="page-header">
+        <h2>Meeting Actions</h2>
+        <p>Extract decisions, action items, and owners from meetings</p>
+      </div>
+      <div class="card">
+        <h3>Process Meeting</h3>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Meeting Title</label>
+            <input type="text" id="mt-title" placeholder="e.g., Sprint Planning">
+          </div>
+          <div class="form-group">
+            <label>Attendees (comma-separated)</label>
+            <input type="text" id="mt-attendees" placeholder="e.g., Alice, Bob, Carol">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Transcript or Notes</label>
+          <textarea id="mt-transcript" style="min-height:200px" placeholder="Paste meeting notes or transcript here..."></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="runMeeting()">Extract Actions</button>
+      </div>
+      <div id="mt-result" class="result-area"></div>`;
+  },
+
+  onboarding() {
+    return `
+      <div class="page-header">
+        <h2>Onboarding Q&A</h2>
+        <p>Ask questions about your team's docs and get answers with citations</p>
+      </div>
+      <div class="card">
+        <h3>Upload Documents</h3>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Document Title</label>
+            <input type="text" id="ob-doc-title" placeholder="e.g., Search Team Architecture">
+          </div>
+          <div class="form-group">
+            <label>Team</label>
+            <input type="text" id="ob-team" placeholder="e.g., Search">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Document Content</label>
+          <textarea id="ob-doc-content" placeholder="Paste document content here..."></textarea>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="uploadDoc()">Upload Document</button>
+        <div id="ob-upload-status" style="margin-top:8px;font-size:13px;color:var(--text-muted)"></div>
+      </div>
+      <div class="card">
+        <h3>Ask a Question</h3>
+        <div class="form-group">
+          <label>Your Question</label>
+          <textarea id="ob-question" style="min-height:80px" placeholder="e.g., Why did we deprecate the legacy search API?"></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="runOnboarding()">Ask</button>
+      </div>
+      <div id="ob-result" class="result-area"></div>`;
+  },
+
+  prioritization() {
+    return `
+      <div class="page-header">
+        <h2>Prioritization Assistant</h2>
+        <p>RICE scoring, dependency mapping, and trade-off analysis</p>
+      </div>
+      <div class="card">
+        <h3>Score Feature Requests</h3>
+        <div class="form-group">
+          <label>Feature Requests (describe each feature, one per paragraph)</label>
+          <textarea id="pr-features" style="min-height:200px" placeholder="1. Offline mode - Allow users to access cached data without internet&#10;&#10;2. Dark mode - System-wide dark theme&#10;&#10;3. Export to PDF - Let users export reports as PDF files&#10;..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Team Context (optional)</label>
+          <input type="text" id="pr-context" placeholder="e.g., B2B SaaS, 50K MAU, 3 engineers">
+        </div>
+        <button class="btn btn-primary" onclick="runPrioritization()">Score & Prioritize</button>
+      </div>
+      <div id="pr-result" class="result-area"></div>`;
+  }
+};
+
+// --- Agent action handlers ---
+async function runFeedback() {
+  const el = document.getElementById('fb-result');
+  el.innerHTML = loading();
+  const data = await API.post('/feedback/analyze', {
+    product: document.getElementById('fb-product').value || 'Product',
+    reviews: document.getElementById('fb-reviews').value,
+    source: 'pasted'
+  });
+  if (data.error) { el.innerHTML = `<div class="card">${data.error}</div>`; return; }
+  el.innerHTML = renderFeedbackResult(data);
+}
+
+function renderFeedbackResult(data) {
+  let html = `<div class="card"><h3>Summary</h3><div class="markdown-output">${md(data.summary)}</div>
+    <p style="margin-top:8px;font-size:13px;color:var(--text-muted)">${data.total_reviews} reviews analyzed</p></div>`;
+
+  if (data.spikes && data.spikes.length) {
+    html += '<div class="card"><h3>Spikes Detected</h3>';
+    data.spikes.forEach(t => { html += renderThemeCard(t); });
+    html += '</div>';
+  }
+
+  html += '<div class="card"><h3>Themes</h3>';
+  (data.themes || []).forEach(t => { html += renderThemeCard(t); });
+  html += '</div>';
+  return html;
+}
+
+function renderThemeCard(t) {
+  return `<div class="theme-card">
+    <div class="theme-severity severity-${t.severity}"></div>
+    <div class="theme-content">
+      <div class="theme-name">${t.name} ${sentimentTag(t.sentiment)} ${trendTag(t.trend)}</div>
+      <div class="theme-meta">${t.count} mentions &middot; ${t.severity} severity</div>
+      ${t.sample_quotes ? `<div class="theme-quotes">"${t.sample_quotes.slice(0,2).join('" &middot; "')}"</div>` : ''}
+    </div>
+  </div>`;
+}
+
+async function runStatus() {
+  const el = document.getElementById('st-result');
+  el.innerHTML = loading();
+  const data = await API.post('/status/generate', {
+    team: document.getElementById('st-team').value || 'Team',
+    period: document.getElementById('st-period').value || 'This Week',
+    raw_updates: document.getElementById('st-updates').value
+  });
+  if (data.error) { el.innerHTML = `<div class="card">${data.error}</div>`; return; }
+  let html = '';
+  if (data.blockers && data.blockers.length) {
+    html += '<div class="card" style="border-left:3px solid var(--danger)"><h3>Blockers</h3>';
+    data.blockers.forEach(b => {
+      html += `<div class="action-item"><strong>${b.title || b}</strong>${b.owner ? ` — <span class="action-owner">${b.owner}</span>` : ''}${b.notes ? `<br><span style="color:var(--text-muted)">${b.notes}</span>` : ''}</div>`;
+    });
+    html += '</div>';
+  }
+  html += `<div class="card"><h3>Executive Summary</h3><div class="markdown-output">${md(data.report_executive)}</div></div>`;
+  html += `<div class="card"><h3>Detailed Report</h3><div class="markdown-output">${md(data.report_detailed)}</div></div>`;
+  el.innerHTML = html;
+}
+
+async function runLaunch() {
+  const el = document.getElementById('la-result');
+  el.innerHTML = loading();
+  const data = await API.post('/launch/check', {
+    product: document.getElementById('la-product').value || 'Feature',
+    launch_date: document.getElementById('la-date').value || 'TBD',
+    prd_text: document.getElementById('la-prd').value
+  });
+  if (data.error) { el.innerHTML = `<div class="card">${data.error}</div>`; return; }
+  let html = `<div class="card"><h3>Readiness: <span style="text-transform:uppercase;color:${data.overall_status === 'ready' ? 'var(--success)' : data.overall_status === 'at_risk' ? 'var(--warning)' : 'var(--danger)'}">${(data.overall_status || '').replace('_', ' ')}</span></h3>
+    <div class="markdown-output">${md(data.summary)}</div></div>`;
+
+  if (data.blockers && data.blockers.length) {
+    html += '<div class="card" style="border-left:3px solid var(--danger)"><h3>Blockers</h3><ul>';
+    data.blockers.forEach(b => { html += `<li>${b}</li>`; });
+    html += '</ul></div>';
+  }
+
+  html += '<div class="card"><h3>Checklist</h3>';
+  (data.checklist || []).forEach(item => {
+    html += `<div class="checklist-item">
+      <div class="status-dot status-${item.status}"></div>
+      <div style="flex:1">
+        <strong>[${item.area}]</strong> ${item.requirement}
+        ${item.pre_drafted_answer ? `<details style="margin-top:4px"><summary style="font-size:12px;color:var(--primary);cursor:pointer">Pre-drafted answer</summary><p style="font-size:13px;margin-top:4px;color:var(--text-muted)">${item.pre_drafted_answer}</p></details>` : ''}
+      </div>
+    </div>`;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+async function runAnalytics() {
+  const el = document.getElementById('an-result');
+  el.innerHTML = loading();
+  const data = await API.post('/analytics/query', {
+    question: document.getElementById('an-question').value
+  });
+  if (data.error) { el.innerHTML = `<div class="card">${data.error}</div>`; return; }
+  let html = `<div class="card"><h3>Generated SQL</h3><pre>${data.sql || ''}</pre></div>`;
+  html += `<div class="card"><h3>Explanation</h3><div class="markdown-output">${md(data.explanation)}</div></div>`;
+  if (data.caveats && data.caveats.length) {
+    html += '<div class="card" style="border-left:3px solid var(--warning)"><h3>Caveats</h3><ul>';
+    data.caveats.forEach(c => { html += `<li>${c}</li>`; });
+    html += '</ul></div>';
+  }
+  if (data.follow_up_questions && data.follow_up_questions.length) {
+    html += '<div class="card"><h3>Follow-up Questions</h3><ul>';
+    data.follow_up_questions.forEach(q => { html += `<li>${q}</li>`; });
+    html += '</ul></div>';
+  }
+  el.innerHTML = html;
+}
+
+let prdMode = 'draft';
+function setPrdMode(mode) {
+  prdMode = mode;
+  document.querySelectorAll('[id^="prd-form-"]').forEach(el => el.style.display = 'none');
+  document.getElementById(`prd-form-${mode}`).style.display = '';
+  document.querySelectorAll('[id^="prd-btn-"]').forEach(el => { el.style.background = 'var(--border)'; el.classList.remove('btn-primary'); });
+  const btn = document.getElementById(`prd-btn-${mode}`);
+  btn.style.background = ''; btn.classList.add('btn-primary');
+}
+
+async function runPrd() {
+  const el = document.getElementById('prd-result');
+  el.innerHTML = loading();
+  const data = await API.post('/prd/draft', {
+    title: document.getElementById('prd-title').value || 'Feature',
+    description: document.getElementById('prd-desc').value
+  });
+  if (data.error) { el.innerHTML = `<div class="card">${data.error}</div>`; return; }
+  let html = '';
+  (data.sections || []).forEach(s => {
+    html += `<div class="card"><h3>${s.title}</h3><div class="markdown-output">${md(s.content)}</div></div>`;
+  });
+  if (data.overall_critique) {
+    html += `<div class="card" style="border-left:3px solid var(--warning)"><h3>Critique</h3><div class="markdown-output">${md(data.overall_critique)}</div></div>`;
+  }
+  if (data.missing_elements && data.missing_elements.length) {
+    html += '<div class="card" style="border-left:3px solid var(--danger)"><h3>Missing Elements</h3><ul>';
+    data.missing_elements.forEach(m => { html += `<li>${m}</li>`; });
+    html += '</ul></div>';
+  }
+  el.innerHTML = html;
+}
+
+async function runPrdInterview() {
+  const el = document.getElementById('prd-result');
+  el.innerHTML = loading();
+  const data = await API.post('/prd/interview', { context: document.getElementById('prd-context').value });
+  if (data.error) { el.innerHTML = `<div class="card">${data.error}</div>`; return; }
+  let html = '<div class="card"><h3>Interview Questions</h3>';
+  (data.questions || []).forEach((q, i) => {
+    html += `<div style="margin-bottom:12px;padding:10px;border:1px solid var(--border);border-radius:var(--radius)">
+      <div style="font-size:12px;color:var(--primary);text-transform:uppercase;margin-bottom:4px">${q.category}</div>
+      <div style="font-weight:600;margin-bottom:4px">${i + 1}. ${q.question}</div>
+      <div style="font-size:12px;color:var(--text-muted)">Why: ${q.why}</div>
+      <details><summary style="font-size:12px;color:var(--primary);cursor:pointer;margin-top:4px">Example answer</summary><p style="font-size:13px;color:var(--text-muted);margin-top:4px">${q.example_answer}</p></details>
+    </div>`;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+async function runPrdCritique() {
+  const el = document.getElementById('prd-result');
+  el.innerHTML = loading();
+  const data = await API.post('/prd/critique', { prd_text: document.getElementById('prd-critique-text').value });
+  if (data.error) { el.innerHTML = `<div class="card">${data.error}</div>`; return; }
+  let html = `<div class="card"><h3>Verdict: <span style="color:${data.verdict === 'ready' ? 'var(--success)' : data.verdict === 'needs_work' ? 'var(--warning)' : 'var(--danger)'}">${data.verdict || 'unknown'}</span> (Score: ${data.score || 0}/100)</h3>
+    <div class="markdown-output">${md(data.overall_critique)}</div></div>`;
+  if (data.missing_elements && data.missing_elements.length) {
+    html += '<div class="card"><h3>Missing Elements</h3><ul>';
+    data.missing_elements.forEach(m => { html += `<li>${m}</li>`; });
+    html += '</ul></div>';
+  }
+  (data.section_critiques || []).forEach(s => {
+    html += `<div class="card"><h3>${s.section}</h3><ul>`;
+    (s.issues || []).forEach(i => { html += `<li style="color:var(--danger)">${i}</li>`; });
+    (s.questions || []).forEach(q => { html += `<li style="color:var(--primary)">${q}</li>`; });
+    html += '</ul></div>';
+  });
+  el.innerHTML = html;
+}
+
+async function runCompetitor() {
+  const el = document.getElementById('co-result');
+  el.innerHTML = loading();
+  const data = await API.post('/competitor/analyze', {
+    our_product: document.getElementById('co-product').value || 'Our Product',
+    updates: document.getElementById('co-updates').value
+  });
+  if (data.error) { el.innerHTML = `<div class="card">${data.error}</div>`; return; }
+  let html = '';
+  if (data.key_takeaways && data.key_takeaways.length) {
+    html += '<div class="card"><h3>Key Takeaways</h3><ul>';
+    data.key_takeaways.forEach(t => { html += `<li><strong>${t}</strong></li>`; });
+    html += '</ul></div>';
+  }
+  if (data.recommended_actions && data.recommended_actions.length) {
+    html += '<div class="card" style="border-left:3px solid var(--primary)"><h3>Recommended Actions</h3><ul>';
+    data.recommended_actions.forEach(a => { html += `<li>${a}</li>`; });
+    html += '</ul></div>';
+  }
+  html += '<div class="card"><h3>Updates</h3>';
+  (data.updates || []).forEach(u => {
+    html += `<div class="theme-card"><div class="theme-content">
+      <div class="theme-name">${u.competitor}: ${u.title} <span class="tag tag-neutral">${u.category}</span></div>
+      <div style="font-size:13px;margin-top:4px">${u.summary}</div>
+      <div style="font-size:12px;color:var(--primary);margin-top:4px">${u.impact_analysis}</div>
+    </div></div>`;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+async function runMeeting() {
+  const el = document.getElementById('mt-result');
+  el.innerHTML = loading();
+  const attendees = document.getElementById('mt-attendees').value.split(',').map(s => s.trim()).filter(Boolean);
+  const data = await API.post('/meeting/process', {
+    title: document.getElementById('mt-title').value || 'Meeting',
+    attendees,
+    transcript: document.getElementById('mt-transcript').value
+  });
+  if (data.error) { el.innerHTML = `<div class="card">${data.error}</div>`; return; }
+  let html = `<div class="card"><h3>Summary</h3><div class="markdown-output">${md(data.summary)}</div></div>`;
+
+  if (data.decisions && data.decisions.length) {
+    html += '<div class="card"><h3>Decisions</h3>';
+    data.decisions.forEach(d => {
+      html += `<div class="action-item"><strong>${d.description}</strong>${d.made_by ? ` — decided by <span class="action-owner">${d.made_by}</span>` : ''}${d.context ? `<br><span style="font-size:12px;color:var(--text-muted)">${d.context}</span>` : ''}</div>`;
+    });
+    html += '</div>';
+  }
+
+  if (data.action_items && data.action_items.length) {
+    html += '<div class="card"><h3>Action Items</h3>';
+    data.action_items.forEach(a => {
+      html += `<div class="action-item"><strong>${a.description}</strong><br>
+        Owner: <span class="action-owner">${a.owner}</span>
+        ${a.due_date ? ` &middot; Due: ${a.due_date}` : ''}
+        ${a.priority ? ` &middot; <span class="tag tag-${a.priority === 'high' ? 'negative' : a.priority === 'medium' ? 'mixed' : 'neutral'}">${a.priority}</span>` : ''}
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  if (data.unresolved_questions && data.unresolved_questions.length) {
+    html += '<div class="card"><h3>Unresolved Questions</h3><ul>';
+    data.unresolved_questions.forEach(q => { html += `<li>${q}</li>`; });
+    html += '</ul></div>';
+  }
+  el.innerHTML = html;
+}
+
+async function uploadDoc() {
+  const status = document.getElementById('ob-upload-status');
+  status.textContent = 'Uploading...';
+  const data = await API.post('/onboarding/upload', {
+    documents: [{
+      title: document.getElementById('ob-doc-title').value,
+      content: document.getElementById('ob-doc-content').value,
+      source: 'manual'
+    }],
+    team: document.getElementById('ob-team').value
+  });
+  status.textContent = data.status === 'documents_loaded' ? 'Document uploaded successfully.' : (data.error || 'Done');
+}
+
+async function runOnboarding() {
+  const el = document.getElementById('ob-result');
+  el.innerHTML = loading();
+  const data = await API.post('/onboarding/ask', {
+    question: document.getElementById('ob-question').value,
+    team: document.getElementById('ob-team').value
+  });
+  if (data.error) { el.innerHTML = `<div class="card">${data.error}</div>`; return; }
+  let html = `<div class="card"><h3>Answer</h3><div class="markdown-output">${md(data.answer)}</div>
+    ${data.confidence ? `<p style="font-size:12px;color:var(--text-muted);margin-top:8px">Confidence: ${Math.round(data.confidence * 100)}%</p>` : ''}</div>`;
+
+  if (data.citations && data.citations.length) {
+    html += '<div class="card"><h3>Citations</h3>';
+    data.citations.forEach(c => {
+      html += `<div style="padding:8px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:6px">
+        <div style="font-weight:600;font-size:13px">${c.source}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px;font-style:italic">"${c.relevant_text}"</div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  if (data.follow_up_questions && data.follow_up_questions.length) {
+    html += '<div class="card"><h3>Follow-up Questions</h3><ul>';
+    data.follow_up_questions.forEach(q => { html += `<li>${q}</li>`; });
+    html += '</ul></div>';
+  }
+  el.innerHTML = html;
+}
+
+async function runPrioritization() {
+  const el = document.getElementById('pr-result');
+  el.innerHTML = loading();
+  const data = await API.post('/prioritization/score', {
+    features: document.getElementById('pr-features').value,
+    context: document.getElementById('pr-context').value
+  });
+  if (data.error) { el.innerHTML = `<div class="card">${data.error}</div>`; return; }
+
+  let html = '';
+  if (data.recommendation) {
+    html += `<div class="card"><h3>Recommendation</h3><div class="markdown-output">${md(data.recommendation)}</div></div>`;
+  }
+
+  if (data.features && data.features.length) {
+    html += '<div class="card"><h3>RICE Scores</h3><table class="rice-table"><thead><tr><th>Feature</th><th>Reach</th><th>Impact</th><th>Confidence</th><th>Effort</th><th>Score</th></tr></thead><tbody>';
+    const sorted = [...data.features].sort((a, b) => ((b.rice || {}).score || 0) - ((a.rice || {}).score || 0));
+    sorted.forEach(f => {
+      const r = f.rice || {};
+      html += `<tr><td><strong>${f.title}</strong><br><span style="font-size:12px;color:var(--text-muted)">${f.rationale || f.description || ''}</span></td>
+        <td>${r.reach || '-'}</td><td>${r.impact || '-'}</td><td>${r.confidence ? Math.round(r.confidence * 100) + '%' : '-'}</td><td>${r.effort || '-'}w</td>
+        <td class="rice-score">${r.score ? r.score.toFixed(1) : '-'}</td></tr>`;
+    });
+    html += '</tbody></table></div>';
+  }
+
+  if (data.trade_offs && data.trade_offs.length) {
+    html += '<div class="card" style="border-left:3px solid var(--warning)"><h3>Trade-offs</h3><ul>';
+    data.trade_offs.forEach(t => { html += `<li>${t}</li>`; });
+    html += '</ul></div>';
+  }
+
+  if (data.suggested_roadmap && data.suggested_roadmap.length) {
+    html += '<div class="card"><h3>Suggested Roadmap</h3>';
+    data.suggested_roadmap.forEach(phase => {
+      html += `<div style="margin-bottom:12px"><div style="font-weight:600;color:var(--primary)">${phase.phase}</div>
+        <div style="font-size:13px">${(phase.features || []).join(', ')}</div>
+        <div style="font-size:12px;color:var(--text-muted)">${phase.rationale || ''}</div></div>`;
+    });
+    html += '</div>';
+  }
+  el.innerHTML = html;
+}
+
+// --- Router ---
+function navigate(page) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelector(`[data-page="${page}"]`).classList.add('active');
+  document.getElementById('app').innerHTML = pages[page]();
+  location.hash = page;
+}
+
+document.querySelectorAll('.nav-item').forEach(n => {
+  n.addEventListener('click', () => navigate(n.dataset.page));
+});
+
+const initialPage = location.hash.slice(1) || 'feedback';
+navigate(pages[initialPage] ? initialPage : 'feedback');
+</script>
+</body>
+</html>

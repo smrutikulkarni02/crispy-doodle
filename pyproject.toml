@@ -1,0 +1,9 @@
+[project]
+name = "pm-copilot"
+version = "1.0.0"
+description = "AI-powered toolkit resolving 9 product manager pain points"
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
